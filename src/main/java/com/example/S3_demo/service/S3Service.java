@@ -44,7 +44,7 @@ public class S3Service implements FileServiceImpl {
 
     @Override
     public byte[] downloadFile(String fileName) {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()//download file
                 .bucket(bucketName)
                 .key(fileName)
                 .build();
