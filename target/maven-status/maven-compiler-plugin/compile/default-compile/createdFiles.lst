@@ -1,0 +1,5 @@
+com/example/S3_demo/config/S3Config.class
+com/example/S3_demo/service/FileServiceImpl.class
+com/example/S3_demo/S3DemoApplication.class
+com/example/S3_demo/controller/S3Controller.class
+com/example/S3_demo/service/S3Service.class
