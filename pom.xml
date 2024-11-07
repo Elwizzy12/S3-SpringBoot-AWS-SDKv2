@@ -60,9 +60,9 @@
 			<artifactId>bom</artifactId>
 			<version>2.24.3</version>
 			<type>pom</type>
-			<scope>import</scope>
-			<!-- AWS SDK v2 S3 dependency -->
+			<scope>runtime</scope>
 		</dependency>
+		<!-- AWS SDK v2 S3 dependency -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>

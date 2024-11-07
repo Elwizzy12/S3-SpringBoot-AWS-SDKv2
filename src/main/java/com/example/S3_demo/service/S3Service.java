@@ -6,11 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,24 +23,27 @@ public class S3Service implements FileServiceImpl {
     }
 
     @Override
-    public String saveFile(MultipartFile file) {
+    public OutputStream saveFile(MultipartFile file) {
         String originalFilename = file.getOriginalFilename();
         try {
-            File tempFile = convertMultipartToFile(file);
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+            // Start multipart upload
+            CreateMultipartUploadRequest createMultipartUploadRequest = CreateMultipartUploadRequest.builder()
                     .bucket(bucketName)
                     .key(originalFilename)
                     .build();
-            PutObjectResponse putObjectResponse = s3Client.putObject(putObjectRequest, tempFile.toPath());
-            return putObjectResponse.eTag();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            CreateMultipartUploadResponse createMultipartUploadResponse = s3Client.createMultipartUpload(createMultipartUploadRequest);
+            String uploadId = createMultipartUploadResponse.uploadId();
+
+            // Create and return the custom OutputStream
+            return new MultipartUploadOutputStream(s3Client, bucketName, originalFilename, uploadId, 5 * 1024 * 1024);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to save file", e);
         }
     }
 
     @Override
     public byte[] downloadFile(String fileName) {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()//download file
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
                 .build();
@@ -74,12 +73,5 @@ public class S3Service implements FileServiceImpl {
         return listObjectsV2Response.contents().stream()
                 .map(S3Object::key)
                 .collect(Collectors.toList());
-    }
-
-    private File convertMultipartToFile(MultipartFile multipartFile) throws IOException {
-        Path tempDir = Files.createTempDirectory("");
-        File tempFile = tempDir.resolve(multipartFile.getOriginalFilename()).toFile();
-        Files.copy(multipartFile.getInputStream(), tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        return tempFile;
     }
 }
